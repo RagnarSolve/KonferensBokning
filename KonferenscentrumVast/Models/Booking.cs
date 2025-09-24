@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Cryptography;
 
 namespace KonferenscentrumVast.Models
 {
@@ -9,7 +10,7 @@ namespace KonferenscentrumVast.Models
     /// </summary>
     public class Booking
     {
-        public int Id { get; set; }
+        public int Id { get; set; } = RandomNumberGenerator.GetInt32(1, int.MaxValue);
         public int CustomerId { get; set; }
         public int FacilityId { get; set; }
         public DateTime StartDate { get; set; }

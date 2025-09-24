@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using KonferenscentrumVast.Data;
 using KonferenscentrumVast.Models;
 using KonferenscentrumVast.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore.Cosmos;
 
 namespace KonferenscentrumVast.Repository.Implementations
 {
@@ -22,7 +23,7 @@ namespace KonferenscentrumVast.Repository.Implementations
         public async Task<IEnumerable<Customer>> GetAllAsync()
         {
             return await _context.Customers
-                .Include(c => c.Bookings)
+                .AsNoTracking()
                 .OrderBy(c => c.LastName)
                 .ToListAsync();
         }
@@ -30,18 +31,15 @@ namespace KonferenscentrumVast.Repository.Implementations
         public async Task<Customer?> GetByIdAsync(int id)
         {
             return await _context.Customers
-                .Include(c => c.Bookings)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        /// <summary>
-        /// Finds customer by email address using case-insensitive comparison.
-        /// Normalizes input email to lowercase for consistent matching.
-        /// </summary>
         public async Task<Customer?> GetByEmailAsync(string email)
         {
-            var normalized = email.Trim().ToLowerInvariant();
+            var normalized = email.ToLowerInvariant();
             return await _context.Customers
+                .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Email.ToLower() == normalized);
         }
 
@@ -82,7 +80,10 @@ namespace KonferenscentrumVast.Repository.Implementations
 
         public async Task<bool> ExistsAsync(int id)
         {
-            return await _context.Customers.AnyAsync(c => c.Id == id);
+            return await _context.Customers
+                .AsNoTracking()
+                .Where(c => c.Id == id)
+                .AnyAsync();
         }
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using KonferenscentrumVast.Data;
 using KonferenscentrumVast.Models;
 using KonferenscentrumVast.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore.Cosmos;
 
 namespace KonferenscentrumVast.Repository.Implementations
 {
@@ -22,7 +23,7 @@ namespace KonferenscentrumVast.Repository.Implementations
         public async Task<IEnumerable<Facility>> GetAllAsync()
         {
             return await _context.Facilities
-                .Include(f => f.Bookings)
+                .AsNoTracking()
                 .OrderBy(f => f.Name)
                 .ToListAsync();
         }
@@ -42,7 +43,7 @@ namespace KonferenscentrumVast.Repository.Implementations
         public async Task<Facility?> GetByIdAsync(int id)
         {
             return await _context.Facilities
-                .Include(f => f.Bookings)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(f => f.Id == id);
         }
 
@@ -84,7 +85,10 @@ namespace KonferenscentrumVast.Repository.Implementations
 
         public async Task<bool> ExistsAsync(int id)
         {
-            return await _context.Facilities.AnyAsync(f => f.Id == id);
+            return await _context.Facilities
+                .AsNoTracking()
+                .Where(f => f.Id == id)
+                .AnyAsync();
         }
     }
 }
