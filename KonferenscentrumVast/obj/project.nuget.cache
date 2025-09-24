@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "uaXduo2k0DY=",
+  "dgSpecHash": "WRKkczp7oww=",
   "success": true,
-  "projectFilePath": "c:\\Users\\samue\\Desktop\\SkolProjekt\\Cloudkurs\\Konferens\\KonferensBokning\\KonferenscentrumVast\\KonferenscentrumVast.csproj",
+  "projectFilePath": "C:\\Users\\samue\\Desktop\\SkolProjekt\\Cloudkurs\\Konferens\\KonferensBokning\\konferenscentrumvast\\KonferenscentrumVast.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\samue\\.nuget\\packages\\azure.core\\1.44.1\\azure.core.1.44.1.nupkg.sha512",
     "C:\\Users\\samue\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",

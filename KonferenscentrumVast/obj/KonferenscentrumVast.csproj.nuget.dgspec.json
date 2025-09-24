@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\samue\\Desktop\\SkolProjekt\\Cloudkurs\\Konferens\\KonferensBokning\\KonferenscentrumVast\\KonferenscentrumVast.csproj": {}
+    "C:\\Users\\samue\\Desktop\\SkolProjekt\\Cloudkurs\\Konferens\\KonferensBokning\\konferenscentrumvast\\KonferenscentrumVast.csproj": {}
   },
   "projects": {
-    "c:\\Users\\samue\\Desktop\\SkolProjekt\\Cloudkurs\\Konferens\\KonferensBokning\\KonferenscentrumVast\\KonferenscentrumVast.csproj": {
+    "C:\\Users\\samue\\Desktop\\SkolProjekt\\Cloudkurs\\Konferens\\KonferensBokning\\konferenscentrumvast\\KonferenscentrumVast.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\samue\\Desktop\\SkolProjekt\\Cloudkurs\\Konferens\\KonferensBokning\\KonferenscentrumVast\\KonferenscentrumVast.csproj",
+        "projectUniqueName": "C:\\Users\\samue\\Desktop\\SkolProjekt\\Cloudkurs\\Konferens\\KonferensBokning\\konferenscentrumvast\\KonferenscentrumVast.csproj",
         "projectName": "KonferenscentrumVast",
-        "projectPath": "c:\\Users\\samue\\Desktop\\SkolProjekt\\Cloudkurs\\Konferens\\KonferensBokning\\KonferenscentrumVast\\KonferenscentrumVast.csproj",
+        "projectPath": "C:\\Users\\samue\\Desktop\\SkolProjekt\\Cloudkurs\\Konferens\\KonferensBokning\\konferenscentrumvast\\KonferenscentrumVast.csproj",
         "packagesPath": "C:\\Users\\samue\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\samue\\Desktop\\SkolProjekt\\Cloudkurs\\Konferens\\KonferensBokning\\KonferenscentrumVast\\obj\\",
+        "outputPath": "C:\\Users\\samue\\Desktop\\SkolProjekt\\Cloudkurs\\Konferens\\KonferensBokning\\konferenscentrumvast\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
