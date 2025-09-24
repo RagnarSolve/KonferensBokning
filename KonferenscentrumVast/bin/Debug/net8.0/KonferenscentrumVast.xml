@@ -352,30 +352,6 @@
             Used for business rule violations, invalid formats, and constraint failures.
             </summary>
         </member>
-        <member name="T:KonferenscentrumVast.Migrations.InitialCreate">
-            <inheritdoc />
-        </member>
-        <member name="M:KonferenscentrumVast.Migrations.InitialCreate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:KonferenscentrumVast.Migrations.InitialCreate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:KonferenscentrumVast.Migrations.InitialCreate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:KonferenscentrumVast.Migrations.Refactor_BookingContract_Domain">
-            <inheritdoc />
-        </member>
-        <member name="M:KonferenscentrumVast.Migrations.Refactor_BookingContract_Domain.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:KonferenscentrumVast.Migrations.Refactor_BookingContract_Domain.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:KonferenscentrumVast.Migrations.Refactor_BookingContract_Domain.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
         <member name="T:KonferenscentrumVast.Models.Booking">
             <summary>
             Represents a facility booking request made by a customer.
@@ -429,22 +405,10 @@
         </member>
         <!-- Badly formed XML comment ignored for member "M:KonferenscentrumVast.Repository.Implementations.BookingRepository.GetByDateRangeAsync(System.DateTime,System.DateTime)" -->
         <!-- Badly formed XML comment ignored for member "M:KonferenscentrumVast.Repository.Implementations.BookingRepository.HasOverlapAsync(System.Int32,System.DateTime,System.DateTime,KonferenscentrumVast.Models.BookingStatus[])" -->
-        <member name="M:KonferenscentrumVast.Repository.Implementations.BookingRepository.HasOverlapExcludingAsync(System.Int32,System.Int32,System.DateTime,System.DateTime,KonferenscentrumVast.Models.BookingStatus[])">
-            <summary>
-            Checks for booking overlaps while excluding a specific booking (used for rescheduling).
-            Prevents a booking from conflicting with itself during updates.
-            </summary>
-        </member>
         <member name="T:KonferenscentrumVast.Repository.Implementations.CustomerRepository">
             <summary>
             Entity Framework implementation of customer repository.
             Includes normalized email lookup for case-insensitive searches.
-            </summary>
-        </member>
-        <member name="M:KonferenscentrumVast.Repository.Implementations.CustomerRepository.GetByEmailAsync(System.String)">
-            <summary>
-            Finds customer by email address using case-insensitive comparison.
-            Normalizes input email to lowercase for consistent matching.
             </summary>
         </member>
         <member name="T:KonferenscentrumVast.Repository.Implementations.FacilityRepository">

@@ -1,8 +1,8 @@
 ﻿using KonferenscentrumVast.Data;
 using KonferenscentrumVast.Repository.Implementations;
 using KonferenscentrumVast.Repository.Interfaces;
-using KonferenscentrumVast.Services;  
-using KonferenscentrumVast.Exceptions;       
+using KonferenscentrumVast.Services;
+using KonferenscentrumVast.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
@@ -41,19 +41,13 @@ builder.Services.AddScoped<BookingContractService>();
 builder.Services.AddScoped<CustomerService>();
 
 // Database
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddCors(opt =>
-{
-    opt.AddPolicy("dev", policy =>
-    {
-        policy
-            .WithOrigins("http://localhost:3000", "http://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
+var cosmos = builder.Configuration.GetRequiredSection("Cosmos");
+builder.Services.AddDbContext<ApplicationDbContext>(opt =>
+    opt.UseCosmos(
+        cosmos["Endpoint"]!,
+        cosmos["Key"]!,
+        cosmos["Database"]!
+    ));
 
 var app = builder.Build();
 
@@ -73,5 +67,11 @@ app.UseCors("dev");           // remove or change if not needed
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.EnsureCreatedAsync();
+}
 
 app.Run();

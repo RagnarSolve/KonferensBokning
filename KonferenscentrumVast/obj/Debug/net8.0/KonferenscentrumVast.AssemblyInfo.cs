@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("KonferenscentrumVast")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b824e75cc3265aefcddf8c66c869f87e158e2f07")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6d37a4c6de9c9dd7a3cf913bc305cacc9a40bffa")]
 [assembly: System.Reflection.AssemblyProductAttribute("KonferenscentrumVast")]
 [assembly: System.Reflection.AssemblyTitleAttribute("KonferenscentrumVast")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

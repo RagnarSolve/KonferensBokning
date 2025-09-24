@@ -4,6 +4,7 @@ using KonferenscentrumVast.Models;
 using KonferenscentrumVast.Repository.Interfaces;
 using KonferenscentrumVast.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Cosmos;
 
 namespace KonferenscentrumVast.Controllers
 {

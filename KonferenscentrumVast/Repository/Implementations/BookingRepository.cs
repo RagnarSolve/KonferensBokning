@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using KonferenscentrumVast.Data;
 using KonferenscentrumVast.Models;
 using KonferenscentrumVast.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore.Cosmos;
 
 namespace KonferenscentrumVast.Repository.Implementations
 {
@@ -22,9 +23,7 @@ namespace KonferenscentrumVast.Repository.Implementations
         public async Task<IEnumerable<Booking>> GetAllAsync()
         {
             return await _context.Bookings
-                .Include(b => b.Customer)
-                .Include(b => b.Facility)
-                .Include(b => b.Contract)
+                .AsNoTracking()
                 .OrderByDescending(b => b.CreatedDate)
                 .ToListAsync();
         }
@@ -32,29 +31,25 @@ namespace KonferenscentrumVast.Repository.Implementations
         public async Task<Booking?> GetByIdAsync(int id)
         {
             return await _context.Bookings
-                .Include(b => b.Customer)
-                .Include(b => b.Facility)
-                .Include(b => b.Contract)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(b => b.Id == id);
         }
 
         public async Task<IEnumerable<Booking>> GetByCustomerIdAsync(int customerId)
         {
             return await _context.Bookings
-                .Include(b => b.Facility)
-                .Include(b => b.Contract)
+                .AsNoTracking()
                 .Where(b => b.CustomerId == customerId)
-                .OrderByDescending(b => b.StartDate)
+                .OrderByDescending(b => b.CreatedDate)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<Booking>> GetByFacilityIdAsync(int facilityId)
         {
             return await _context.Bookings
-                .Include(b => b.Customer)
-                .Include(b => b.Contract)
+                .AsNoTracking()
                 .Where(b => b.FacilityId == facilityId)
-                .OrderBy(b => b.StartDate)
+                .OrderByDescending(b => b.CreatedDate)
                 .ToListAsync();
         }
 
@@ -66,8 +61,8 @@ namespace KonferenscentrumVast.Repository.Implementations
         {
             // overlaps if (Start <= end) AND (End >= start)
             return await _context.Bookings
-                .Include(b => b.Customer)
-                .Include(b => b.Facility)
+                // .Include(b => b.Customer)
+                // .Include(b => b.Facility)
                 .Where(b => b.StartDate <= endDate && b.EndDate >= startDate)
                 .OrderBy(b => b.StartDate)
                 .ToListAsync();
@@ -112,7 +107,10 @@ namespace KonferenscentrumVast.Repository.Implementations
 
         public async Task<bool> ExistsAsync(int id)
         {
-            return await _context.Bookings.AnyAsync(b => b.Id == id);
+            return await _context.Bookings
+                .AsNoTracking()
+                .Where(b => b.Id == id)
+                .AnyAsync();
         }
 
         /// <summary>
@@ -120,24 +118,37 @@ namespace KonferenscentrumVast.Repository.Implementations
         /// Uses optimized query with AsNoTracking for performance.
         /// Overlap logic: (existing.Start < newEnd) AND (existing.End > newStart)
         /// </summary>
-        public async Task<bool> HasOverlapAsync(int facilityId, DateTime startDate, DateTime endDate, BookingStatus[] statuses)
+        /// 
+
+        public async Task<bool> HasOverlapAsync(
+    int facilityId, DateTime startDate, DateTime endDate, BookingStatus[] statuses)
         {
-            return await _context.Bookings
+            // Load candidates simply (Cosmos-friendly), then filter in memory
+            var candidates = await _context.Bookings
                 .AsNoTracking()
-                .Where(b => b.FacilityId == facilityId && statuses.Contains(b.Status))
-                .AnyAsync(b => b.StartDate < endDate && b.EndDate > startDate);
+                .Where(b => b.FacilityId == facilityId)
+                .ToListAsync();
+
+            var allowed = statuses?.ToHashSet() ?? new HashSet<BookingStatus>();
+            return candidates.Any(b =>
+                b.StartDate < endDate &&
+                b.EndDate > startDate &&
+                allowed.Contains(b.Status));
         }
 
-        /// <summary>
-        /// Checks for booking overlaps while excluding a specific booking (used for rescheduling).
-        /// Prevents a booking from conflicting with itself during updates.
-        /// </summary>
-        public async Task<bool> HasOverlapExcludingAsync(int bookingId, int facilityId, DateTime startDate, DateTime endDate, BookingStatus[] statuses)
+        public async Task<bool> HasOverlapExcludingAsync(
+            int bookingId, int facilityId, DateTime startDate, DateTime endDate, BookingStatus[] statuses)
         {
-            return await _context.Bookings
+            var candidates = await _context.Bookings
                 .AsNoTracking()
-                .Where(b => b.Id != bookingId && b.FacilityId == facilityId && statuses.Contains(b.Status))
-                .AnyAsync(b => b.StartDate < endDate && b.EndDate > startDate);
+                .Where(b => b.FacilityId == facilityId && b.Id != bookingId)
+                .ToListAsync();
+
+            var allowed = statuses?.ToHashSet() ?? new HashSet<BookingStatus>();
+            return candidates.Any(b =>
+                b.StartDate < endDate &&
+                b.EndDate > startDate &&
+                allowed.Contains(b.Status));
         }
     }
 }
