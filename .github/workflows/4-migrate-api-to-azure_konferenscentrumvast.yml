@@ -1,6 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy ASP.Net Core app to Azure Web App - konferenscentrumvast
 
 on:
@@ -13,26 +10,27 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: read # Required for actions/checkout
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.x"
 
-      # Byt ut 'src/KonferenscentrumVast/' mot mappen där din .csproj ligger
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
-        working-directory: src/KonferenscentrumVast
+      - name: List repo structure
+        run: dir /s
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
-        working-directory: src/KONFERENSBOKNING/KonferenscentrumVast
+      - name: Build .NET project
+        run: dotnet build src/KonferenscentrumVast/KonferenscentrumVast.csproj --configuration Release
 
-      - name: Upload artifact for deployment job
+      - name: Publish .NET project
+        run: dotnet publish src/KonferenscentrumVast/KonferenscentrumVast.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+
+      - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
@@ -42,11 +40,11 @@ jobs:
     runs-on: windows-latest
     needs: build
     permissions:
-      id-token: write # Required for Azure login
-      contents: read # Required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: .net-app
@@ -54,9 +52,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_C3F1B5297BC244159A1FB4E7421130FB }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_117EFBE9659D41E3A64EF9933EE06C40 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_00958519AA014C59B33D6EE23721CB13 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
