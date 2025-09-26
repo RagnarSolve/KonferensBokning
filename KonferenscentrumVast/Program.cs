@@ -6,6 +6,8 @@ using KonferenscentrumVast.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
+using Azure.Identity;
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +43,12 @@ builder.Services.AddScoped<BookingContractService>();
 builder.Services.AddScoped<CustomerService>();
 
 // Database
+var keyVaultUri = builder.Configuration["KeyVaultUri"];
+if (!string.IsNullOrWhiteSpace(keyVaultUri))
+{
+    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
+}
+
 var cosmos = builder.Configuration.GetRequiredSection("Cosmos");
 builder.Services.AddDbContext<ApplicationDbContext>(opt =>
     opt.UseCosmos(
