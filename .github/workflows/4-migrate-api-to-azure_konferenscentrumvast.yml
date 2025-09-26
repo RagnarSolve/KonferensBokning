@@ -22,7 +22,8 @@ jobs:
           dotnet-version: "8.x"
 
       - name: List repo structure
-        run: dir /s
+        shell: pwsh
+        run: Get-ChildItem -Recurse
 
       - name: Build .NET project
         run: dotnet build src/KonferenscentrumVast/KonferenscentrumVast.csproj --configuration Release
