@@ -18,12 +18,14 @@ namespace KonferenscentrumVast.Controllers
     public class BookingContractController : ControllerBase
     {
         private readonly BookingContractService _service;
+        private readonly BlobService _blobService;
         private readonly IBookingContractRepository _contracts;
         private readonly ILogger<BookingContractController> _logger;
 
-        public BookingContractController(BookingContractService service, IBookingContractRepository contracts, ILogger<BookingContractController> logger)
+        public BookingContractController(BookingContractService service, BlobService blobService, IBookingContractRepository contracts, ILogger<BookingContractController> logger)
         {
             _service = service;
+            _blobService = blobService;
             _logger = logger;
             _contracts = contracts;
         }
@@ -144,6 +146,13 @@ namespace KonferenscentrumVast.Controllers
         {
             var entity = await _service.CancelAsync(id, reason);
             return Ok(ToDto(entity));
+        }
+
+        [HttpPost("upload-contract-pdf")]
+        public async Task<IActionResult> UploadBlob(IFormFile blobfile)
+        {
+            var result = await _blobService.UploadAsync(blobfile);
+            return Ok(result);
         }
 
         /// <summary>
