@@ -41,6 +41,7 @@ builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<FacilityService>();
 builder.Services.AddScoped<BookingContractService>();
 builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<BlobService>();
 
 // Database
 var keyVaultUri = builder.Configuration["KeyVaultUri"];
