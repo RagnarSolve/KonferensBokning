@@ -1,4 +1,4 @@
-name: Build and deploy ASP.Net Core app to Azure Web App - konferenscentrumvast
+name: Build and deploy .NET Azure Function App - konferens-functionApp
 
 on:
   push:
@@ -9,57 +9,45 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    permissions:
-      contents: read
-
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.x"
 
-      - name: List repo structure
-        shell: pwsh
-        run: Get-ChildItem -Recurse
+      - name: Build
+        run: dotnet build KonferensBokning/KonferenscentrumVast/KonferenscentrumVast.csproj --configuration Release
 
-      - name: Build .NET project
-        run: dotnet build KonferenscentrumVast/KonferenscentrumVast.csproj --configuration Release
+      - name: Publish
+        run: dotnet publish KonferensBokning/KonferenscentrumVast/KonferenscentrumVast.csproj -c Release -o ./publish
 
-      - name: Publish .NET project
-        run: dotnet publish KonferenscentrumVast/KonferenscentrumVast.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
-
-      - name: Upload artifact for deployment
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: functionapp
+          path: ./publish
 
   deploy:
     runs-on: windows-latest
     needs: build
-    permissions:
-      id-token: write
-      contents: read
-
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: .net-app
+          name: functionapp
 
-      - name: Login to Azure
+      - name: Azure Login
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
 
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
+      - name: Deploy Azure Function App
+        uses: Azure/functions-action@v1
         with:
-          app-name: "konferenscentrumvast"
-          slot-name: "Production"
-          package: ${{env.DOTNET_ROOT}}/myapp
+          app-name: "konferens-functionApp"
+          package: .
