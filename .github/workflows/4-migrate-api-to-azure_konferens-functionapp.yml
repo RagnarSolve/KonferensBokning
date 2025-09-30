@@ -25,10 +25,10 @@ jobs:
               run: ls -R
 
             - name: Build Function App
-              run: dotnet build KonferenscentrumVast/KonferenscentrumVast.csproj --configuration Release
+              run: dotnet build Functions/KonferenscentrumVast.Functions.csproj --configuration Release
 
             - name: Publish Function App
-              run: dotnet publish KonferenscentrumVast/KonferenscentrumVast.csproj -c Release -o ./publish
+              run: dotnet publish Functions/KonferenscentrumVast.Functions.csproj -c Release -o ./publish
 
             - name: Upload artifact
               uses: actions/upload-artifact@v4
