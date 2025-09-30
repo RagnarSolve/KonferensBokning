@@ -7,7 +7,10 @@ on:
     workflow_dispatch:
 
 jobs:
-    build:
+    # ---------------------------
+    # Build Functions Project
+    # ---------------------------
+    build-functions:
         runs-on: windows-latest
         steps:
             - name: Checkout code
@@ -18,17 +21,14 @@ jobs:
               with:
                   dotnet-version: "8.x"
 
-            - name: List repo files
-              run: ls -R
-
-            - name: Build API project
-              run: dotnet build KonferenscentrumVast/KonferenscentrumVast.csproj --configuration Release
+            - name: Restore Function App
+              run: dotnet restore KonferenscentrumVast/Functions/KonferenscentrumVast.Functions.csproj
 
             - name: Build Function App
-              run: dotnet build KonferenscentrumVast/Functions/KonferenscentrumVast.Functions.csproj --configuration Release
+              run: dotnet build KonferenscentrumVast/Functions/KonferenscentrumVast.Functions.csproj --configuration Release --no-restore
 
             - name: Publish Function App
-              run: dotnet publish KonferenscentrumVast/Functions/KonferenscentrumVast.Functions.csproj -c Release -o ./publish
+              run: dotnet publish KonferenscentrumVast/Functions/KonferenscentrumVast.Functions.csproj -c Release -o ./publish --no-restore
 
             - name: Upload artifact
               uses: actions/upload-artifact@v4
@@ -36,9 +36,32 @@ jobs:
                   name: functionapp
                   path: ./publish
 
+    # ---------------------------
+    # Build API (controllers) Project
+    # ---------------------------
+    build-api:
+        runs-on: windows-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: "8.x"
+
+            - name: Restore API
+              run: dotnet restore KonferenscentrumVast/KonferenscentrumVast.csproj
+
+            - name: Build API
+              run: dotnet build KonferenscentrumVast/KonferenscentrumVast.csproj --configuration Release --no-restore
+
+    # ---------------------------
+    # Deploy Functions after build succeeds
+    # ---------------------------
     deploy:
         runs-on: windows-latest
-        needs: build
+        needs: build-functions
         steps:
             - name: Download artifact
               uses: actions/download-artifact@v4
