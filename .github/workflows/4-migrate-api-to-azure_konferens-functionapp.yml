@@ -1,59 +1,33 @@
-name: Build and deploy .NET Azure Function App - konferens-functionApp
+name: Build and Deploy Azure Functions
 
 on:
     push:
         branches:
-            - 4-migrate-api-to-azure
-    workflow_dispatch:
+            - main
 
 jobs:
-    build:
+    build-and-deploy:
         runs-on: windows-latest
+
         steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+            - uses: actions/checkout@v3
 
             - name: Setup .NET
-              uses: actions/setup-dotnet@v4
+              uses: actions/setup-dotnet@v3
               with:
-                  dotnet-version: "8.x"
+                  dotnet-version: "9.0.x"
 
-            - name: Restore
-              run: dotnet restore KonferenscentrumVast/KonferenscentrumVast.csproj
-
-            - name: Build API project
-              run: dotnet build KonferenscentrumVast/KonferenscentrumVast.csproj --configuration Release
+            - name: Restore Dependencies
+              run: dotnet restore ./KonferenscentrumVast.Functions/Functions.csproj
 
             - name: Build Function App
-              run: dotnet build KonferenscentrumVast/Functions/KonferenscentrumVast.Functions.csproj --configuration Release
+              run: dotnet build ./KonferenscentrumVast.Functions/Functions.csproj --configuration Release
 
             - name: Publish Function App
-              run: dotnet publish KonferenscentrumVast/Functions/KonferenscentrumVast.Functions.csproj -c Release -o ./publish
-
-            - name: Upload artifact
-              uses: actions/upload-artifact@v4
-              with:
-                  name: functionapp
-                  path: ./publish
-
-    deploy:
-        runs-on: windows-latest
-        needs: build
-        steps:
-            - name: Download artifact
-              uses: actions/download-artifact@v4
-              with:
-                  name: functionapp
-
-            - name: Azure Login
-              uses: azure/login@v2
-              with:
-                  client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID }}
-                  tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
-                  subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
+              run: dotnet publish ./KonferenscentrumVast.Functions/Functions.csproj --configuration Release --output ./publish
 
             - name: Deploy to Azure Function App
-              uses: Azure/functions-action@v1
+              uses: azure/functions-action@v1
               with:
                   app-name: "konferens-functionApp"
-                  package: ./functionapp
+                  package: "./publish"
