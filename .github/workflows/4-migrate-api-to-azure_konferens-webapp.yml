@@ -1,0 +1,31 @@
+name: Build and deploy ASP.Net Core app to Azure Web App - konferens-webApp
+
+on:
+  push:
+    branches:
+      - 4-migrate-api-to-azure
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.x"
+
+      - name: Build and publish
+        run: dotnet publish "KonferenscentrumVast/KonferenscentrumVast.csproj" --configuration Release --output KonferenscentrumVast/publish
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: "konferens-webApp"
+          slot-name: "Production"
+          package: KonferenscentrumVast/publish
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_40C2F25DD05D4FD3AEC8ADDDBCEC2B28 }}

@@ -21,7 +21,6 @@ namespace KonferenscentrumVast.Models
         public string PostalCode { get; set; } = string.Empty;
         public string City { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
-
         public List<Booking> Bookings { get; set; } = new List<Booking>();
     }
 }
