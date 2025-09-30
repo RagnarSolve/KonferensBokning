@@ -1,53 +1,59 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy dotnet core app to Azure Function App - konferens-functionApp
+name: Build and deploy .NET Azure Function App - konferens-functionApp
 
 on:
-  push:
-    branches:
-      - 4-migrate-api-to-azure
-  workflow_dispatch:
-
-env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
-  DOTNET_VERSION: '8.0.x' # set this to the dotnet version to use
+    push:
+        branches:
+            - 4-migrate-api-to-azure
+    workflow_dispatch:
 
 jobs:
-  build-and-deploy:
-    runs-on: windows-latest
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+    build:
+        runs-on: windows-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-    steps:
-      - name: 'Checkout GitHub Action'
-        uses: actions/checkout@v4
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: "8.x"
 
-      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+            - name: List repo files
+              run: ls -R
 
-      - name: 'Resolve Project Dependencies Using Dotnet'
-        shell: pwsh
-        run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          dotnet build --configuration Release --output ./output
-          popd
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_FA48EC858EC84A9D8D84424AD205F873 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_972C3CF06E7543CDAF06FB172ED08952 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_B3A19A6379604D3AA3CB0CB77AA3AE63 }}
+            - name: Build Function App
+              run: dotnet build KonferenscentrumVast/KonferenscentrumVast.csproj --configuration Release
 
-      - name: 'Run Azure Functions Action'
-        uses: Azure/functions-action@v1
-        id: fa
-        with:
-          app-name: 'konferens-functionApp'
-          slot-name: 'Production'
-          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-          
+            - name: Publish Function App
+              run: dotnet publish KonferenscentrumVast/KonferenscentrumVast.csproj -c Release -o ./publish
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: functionapp
+                  path: ./publish
+
+    deploy:
+        runs-on: windows-latest
+        needs: build
+        steps:
+            - name: Download artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: functionapp
+
+            - name: Azure Login
+              uses: azure/login@v2
+              with:
+                  client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID }}
+                  tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
+                  subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
+
+            - name: Deploy to Azure Function App
+              uses: Azure/functions-action@v1
+              with:
+                  app-name: "konferens-functionApp"
+                  package: ./functionapp

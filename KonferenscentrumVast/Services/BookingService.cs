@@ -178,5 +178,10 @@ namespace KonferenscentrumVast.Services
             var days = Math.Max(1, (end.Date - start.Date).Days);
             return facility.PricePerDay * days;
         }
+
+        internal async Task<object> GetByIdAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
