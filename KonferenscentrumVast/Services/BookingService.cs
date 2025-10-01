@@ -10,22 +10,13 @@ namespace KonferenscentrumVast.Services
     /// Manages the complete booking lifecycle from creation to completion.
     /// Handles availability checking, pricing calculations, and automatic contract generation.
     /// </summary>
-    public class BookingService
+    public class BookingService(IBookingRepository bookings, ICustomerRepository customers, IFacilityRepository facilities, ILogger<BookingService> logger, BookingContractService contractService)
     {
-        private readonly IBookingRepository _bookings;
-        private readonly ICustomerRepository _customers;
-        private readonly IFacilityRepository _facilities;
-        private readonly ILogger<BookingService> _logger;
-        private readonly BookingContractService _contractService;
-
-        public BookingService(IBookingRepository bookings, ICustomerRepository customers, IFacilityRepository facilities, ILogger<BookingService> logger, BookingContractService contractService)
-        {
-            _bookings = bookings;
-            _customers = customers;
-            _facilities = facilities;
-            _logger = logger;
-            _contractService = contractService;
-        }
+        private readonly IBookingRepository _bookings = bookings;
+        private readonly ICustomerRepository _customers = customers;
+        private readonly IFacilityRepository _facilities = facilities;
+        private readonly ILogger<BookingService> _logger = logger;
+        private readonly BookingContractService _contractService = contractService;
 
         /// <summary>
         /// Creates a new booking with validation and conflict checking.
