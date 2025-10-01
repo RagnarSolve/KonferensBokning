@@ -40,8 +40,12 @@ namespace KonferenscentrumVast.Services
             int numberOfParticipants,
             string? notes)
         {
+            _logger.LogInformation("Trying to create booking");
             if (numberOfParticipants <= 0)
+            {
+                _logger.LogInformation("Can not have less than one participant(s)");
                 throw new ValidationException("Number of participants must be greater than zero.");
+            }
 
             DateRangeValidator.EnsureValidRange(startDate, endDate);
 
@@ -52,16 +56,25 @@ namespace KonferenscentrumVast.Services
                 ?? throw new NotFoundException($"Facility with id={facilityId} was not found.");
 
             if (!facility.IsActive)
+            {
+                _logger.LogInformation("Could not use this facility because it's not active.");
                 throw new ValidationException("Facility is not active and cannot be booked.");
+            }
 
             if (numberOfParticipants > facility.MaxCapacity)
+            {
+                _logger.LogInformation("The facility can not have this much participants.");
                 throw new ValidationException($"Participants exceed facility capacity ({facility.MaxCapacity}).");
+            }
 
             var statuses = new[] { BookingStatus.Pending, BookingStatus.Confirmed };
             var hasConflict = await _bookings.HasOverlapAsync(facilityId, startDate, endDate, statuses);
 
             if (hasConflict)
+            {
+                _logger.LogInformation("Booking conflict for unique facility with dates.");
                 throw new ConflictException($"Booking conflict for facility {facilityId} between {startDate:yyyy-MM-dd HH:mm} and {endDate:yyyy-MM-dd HH:mm}.");
+            }
 
             var totalPrice = CalculateTotalPrice(facility, startDate, endDate);
 
@@ -94,10 +107,16 @@ namespace KonferenscentrumVast.Services
                 ?? throw new NotFoundException($"Booking with id={bookingId} was not found.");
 
             if (booking.Status == BookingStatus.Cancelled)
+            {
+                _logger.LogInformation("Could not confirm a cancelled booking.");
                 throw new ValidationException("Cannot confirm a cancelled booking.");
+            }
 
             if (DateRangeValidator.IsDateInPast(booking.StartDate))
+            {
+                _logger.LogInformation("Could not confirm a booking with wrong date.");
                 throw new ValidationException("Cannot confirm a booking that starts in the past.");
+            }
 
             booking.Status = BookingStatus.Confirmed;
             booking.ConfirmedDate = DateTime.UtcNow;
@@ -115,19 +134,26 @@ namespace KonferenscentrumVast.Services
         /// </summary>
         public async Task<Booking> RescheduleBookingAsync(int bookingId, DateTime newStart, DateTime newEnd)
         {
+            _logger.LogInformation("Trying to reschedule booking.");
             DateRangeValidator.EnsureValidRange(newStart, newEnd);
 
             var booking = await _bookings.GetByIdAsync(bookingId)
                 ?? throw new NotFoundException($"Booking with id={bookingId} was not found.");
 
             if (booking.Status == BookingStatus.Cancelled)
+            {
+                _logger.LogInformation("Could not reschedule cancelled booking.");
                 throw new ValidationException("Cannot reschedule a cancelled booking.");
+            }
 
             var facility = await _facilities.GetByIdAsync(booking.FacilityId)
                 ?? throw new NotFoundException($"Facility with id={booking.FacilityId} was not found.");
 
             if (!facility.IsActive)
+            {
+                _logger.LogInformation("Could not find an active facility.");
                 throw new ValidationException("Facility is not active and cannot be booked.");
+            }
 
             var statuses = new[] { BookingStatus.Pending, BookingStatus.Confirmed };
             var hasConflict = await _bookings.HasOverlapExcludingAsync(booking.Id, booking.FacilityId, newStart, newEnd, statuses);
@@ -148,6 +174,7 @@ namespace KonferenscentrumVast.Services
 
         public async Task CancelBookingAsync(int bookingId, string? reason)
         {
+            _logger.LogInformation("Trying to cancel booking.");
             var booking = await _bookings.GetByIdAsync(bookingId)
                 ?? throw new NotFoundException($"Booking with id={bookingId} was not found.");
 

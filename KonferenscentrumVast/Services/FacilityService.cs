@@ -28,6 +28,7 @@ namespace KonferenscentrumVast.Services
 
         public async Task<Facility> GetByIdAsync(int id)
         {
+            _logger.LogInformation("Trying to get facility ID.");
             return await _facilities.GetByIdAsync(id)
                 ?? throw new NotFoundException($"Facility with id={id} was not found.");
         }
@@ -42,6 +43,7 @@ namespace KonferenscentrumVast.Services
             decimal pricePerDay,
             bool isActive)
         {
+            _logger.LogInformation("Trying to create facility information.");
             EnsureFacilityFields(name, address, postalCode, city, maxCapacity, pricePerDay);
 
             var facility = new Facility
@@ -75,6 +77,7 @@ namespace KonferenscentrumVast.Services
             decimal pricePerDay,
             bool isActive)
         {
+            _logger.LogInformation("Trying to update facility information.");
             EnsureFacilityFields(name, address, postalCode, city, maxCapacity, pricePerDay);
 
             var existing = await _facilities.GetByIdAsync(id)
@@ -98,13 +101,17 @@ namespace KonferenscentrumVast.Services
 
         public async Task DeleteAsync(int id)
         {
+            _logger.LogInformation("Trying to delete facility details.");
             var facility = await _facilities.GetByIdAsync(id)
                 ?? throw new NotFoundException($"Facility with id={id} was not found.");
 
 
             var removed = await _facilities.DeleteAsync(id);
             if (!removed)
+            {
+                _logger.LogInformation("Could not find facility ID when trying to delete facility.");
                 throw new NotFoundException($"Facility with id={id} was not found during delete.");
+            }
 
             _logger.LogInformation("Deleted facility {FacilityId}.", id);
         }

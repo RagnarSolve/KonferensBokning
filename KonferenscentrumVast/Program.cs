@@ -84,7 +84,8 @@ var blobServiceClient = new BlobServiceClient(blobConnection);
 builder.Services.AddSingleton(blobServiceClient);
 builder.Services.AddScoped<BlobService>(provider =>
     new BlobService(provider.GetRequiredService<BlobServiceClient>(),
-    containerName!
+    containerName!,
+    provider.GetRequiredService<ILogger<BlobService>>()
 ));
 
 builder.Services.AddCors(opt =>
