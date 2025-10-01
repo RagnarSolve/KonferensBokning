@@ -14,21 +14,14 @@ namespace KonferenscentrumVast.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    public class CustomerController : ControllerBase
+    public class CustomerController(
+        CustomerService customerService,
+        ICustomerRepository customers,
+        ILogger<CustomerController> logger) : ControllerBase
     {
-        private readonly CustomerService _customerService;
-        private readonly ICustomerRepository _customers;
-        private readonly ILogger<CustomerController> _logger;
-
-        public CustomerController(
-            CustomerService customerService,
-            ICustomerRepository customers,
-            ILogger<CustomerController> logger)
-        {
-            _customerService = customerService;
-            _customers = customers;
-            _logger = logger;
-        }
+        private readonly CustomerService _customerService = customerService;
+        private readonly ICustomerRepository _customers = customers;
+        private readonly ILogger<CustomerController> _logger = logger;
 
         /// <summary>
         /// Retrieves all customers with booking statistics
@@ -37,8 +30,16 @@ namespace KonferenscentrumVast.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CustomerResponseDto>>> GetAll()
         {
-            var list = await _customers.GetAllAsync();
-            return Ok(list.Select(ToDto));
+            try
+            {
+                var list = await _customers.GetAllAsync();
+                return Ok(list.Select(ToDto));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error get all customers");
+                return StatusCode(500, "Error retrieving all customers.");
+            }
         }
 
         /// <summary>
@@ -51,9 +52,17 @@ namespace KonferenscentrumVast.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult<CustomerResponseDto>> GetById(int id)
         {
-            var entity = await _customers.GetByIdAsync(id);
-            if (entity == null) return NotFound();
-            return Ok(ToDto(entity));
+            try
+            {
+                var entity = await _customers.GetByIdAsync(id);
+                if (entity == null) return NotFound();
+                return Ok(ToDto(entity));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error get by id customer {CustomerId}", id);
+                return StatusCode(500, "Error retrieving customer.");
+            }
         }
 
         /// <summary>
@@ -67,12 +76,20 @@ namespace KonferenscentrumVast.Controllers
         [HttpGet("by-email")]
         public async Task<ActionResult<CustomerResponseDto>> GetByEmail([FromQuery] string email)
         {
-            if (string.IsNullOrWhiteSpace(email))
-                return BadRequest(new { message = "Email is required." });
+            try
+            {
+                if (string.IsNullOrWhiteSpace(email))
+                    return BadRequest(new { message = "Email is required." });
 
-            var entity = await _customerService.GetByEmailAsync(email);
-            if (entity == null) return NotFound();
-            return Ok(ToDto(entity));
+                var entity = await _customerService.GetByEmailAsync(email);
+                if (entity == null) return NotFound();
+                return Ok(ToDto(entity));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error get email {Email}", email);
+                return StatusCode(500, "Error retrieving customer by email.");
+            }
         }
 
         /// <summary>
@@ -86,18 +103,26 @@ namespace KonferenscentrumVast.Controllers
         [HttpPost]
         public async Task<ActionResult<CustomerResponseDto>> Create([FromBody] CustomerCreateDto dto)
         {
-            var created = await _customerService.CreateAsync(
-                dto.FirstName,
-                dto.LastName,
-                dto.Email,
-                dto.Phone,
-                dto.CompanyName,
-                dto.Address,
-                dto.PostalCode,
-                dto.City
-            );
+            try
+            {
+                var created = await _customerService.CreateAsync(
+                    dto.FirstName,
+                    dto.LastName,
+                    dto.Email,
+                    dto.Phone,
+                    dto.CompanyName,
+                    dto.Address,
+                    dto.PostalCode,
+                    dto.City
+                );
 
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, ToDto(created));
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, ToDto(created));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error create customer with email {Email}", dto.Email);
+                return StatusCode(500, "Error creating customer email.");
+            }
         }
 
         /// <summary>
@@ -113,26 +138,42 @@ namespace KonferenscentrumVast.Controllers
         [HttpPut("{id:int}")]
         public async Task<ActionResult<CustomerResponseDto>> Update(int id, [FromBody] CustomerUpdateDto dto)
         {
-            var updated = await _customerService.UpdateAsync(
-                id,
-                dto.FirstName,
-                dto.LastName,
-                dto.Email,
-                dto.Phone,
-                dto.CompanyName,
-                dto.Address,
-                dto.PostalCode,
-                dto.City
-            );
+            try
+            {
+                var updated = await _customerService.UpdateAsync(
+                    id,
+                    dto.FirstName,
+                    dto.LastName,
+                    dto.Email,
+                    dto.Phone,
+                    dto.CompanyName,
+                    dto.Address,
+                    dto.PostalCode,
+                    dto.City
+                );
 
-            return Ok(ToDto(updated));
+                return Ok(ToDto(updated));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error update customer {CustomerId}", id);
+                return StatusCode(500, "Error updating customer.");
+            }
         }
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _customerService.DeleteAsync(id);
-            return NoContent();
+            try
+            {
+                await _customerService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error delete customer {CustomerId}", id);
+                return StatusCode(500, "Error deleting customer.");
+            }
         }
 
         // ------- Mapping helpers -------

@@ -14,21 +14,14 @@ namespace KonferenscentrumVast.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    public class BookingController : ControllerBase
+    public class BookingController(
+        BookingService bookingService,
+        IBookingRepository bookings,
+        ILogger<BookingController> logger) : ControllerBase
     {
-        private readonly BookingService _bookingService;
-        private readonly IBookingRepository _bookings;
-        private readonly ILogger<BookingController> _logger;
-
-        public BookingController(
-            BookingService bookingService,
-            IBookingRepository bookings,
-            ILogger<BookingController> logger)
-        {
-            _bookingService = bookingService;
-            _bookings = bookings;
-            _logger = logger;
-        }
+        private readonly BookingService _bookingService = bookingService;
+        private readonly IBookingRepository _bookings = bookings;
+        private readonly ILogger<BookingController> _logger = logger;
 
         /// <summary>
         /// Retrieves a specific booking by ID
@@ -40,9 +33,17 @@ namespace KonferenscentrumVast.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult<BookingResponseDto>> GetById(int id)
         {
-            var booking = await _bookings.GetByIdAsync(id);
-            if (booking == null) return NotFound();
-            return Ok(ToDto(booking));
+            try
+            {
+                var booking = await _bookings.GetByIdAsync(id);
+                if (booking == null) return NotFound();
+                return Ok(ToDto(booking));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error for booking {BookingId}", id);
+                return StatusCode(500, "Error retrieving booking.");
+            }
         }
 
         /// <summary>
@@ -52,8 +53,16 @@ namespace KonferenscentrumVast.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<BookingResponseDto>>> GetAll()
         {
-            var data = await _bookings.GetAllAsync();
-            return Ok(data.Select(ToDto));
+            try
+            {
+                var data = await _bookings.GetAllAsync();
+                return Ok(data.Select(ToDto));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching booking.");
+                return StatusCode(500, "Error retrieving bookings.");
+            }
         }
 
         /// <summary>
@@ -72,18 +81,27 @@ namespace KonferenscentrumVast.Controllers
             [FromQuery] DateTime? from,
             [FromQuery] DateTime? to)
         {
-            IEnumerable<Booking> data;
+            try
+            {
+                IEnumerable<Booking> data;
 
-            if (customerId.HasValue)
-                data = await _bookings.GetByCustomerIdAsync(customerId.Value);
-            else if (facilityId.HasValue)
-                data = await _bookings.GetByFacilityIdAsync(facilityId.Value);
-            else if (from.HasValue && to.HasValue)
-                data = await _bookings.GetByDateRangeAsync(from.Value, to.Value);
-            else
-                data = await _bookings.GetAllAsync();
+                if (customerId.HasValue)
+                    data = await _bookings.GetByCustomerIdAsync(customerId.Value);
+                else if (facilityId.HasValue)
+                    data = await _bookings.GetByFacilityIdAsync(facilityId.Value);
+                else if (from.HasValue && to.HasValue)
+                    data = await _bookings.GetByDateRangeAsync(from.Value, to.Value);
+                else
+                    data = await _bookings.GetAllAsync();
 
-            return Ok(data.Select(ToDto));
+                return Ok(data.Select(ToDto));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error filtered customerId={CustomerId}, facilityId={FacilityId}, from={From}, to={To}",
+                    customerId, facilityId, from, to);
+                return StatusCode(500, "Error filtering bookings.");
+            }
         }
 
         /// <summary>
@@ -96,17 +114,26 @@ namespace KonferenscentrumVast.Controllers
         /// <response code="404">Customer or facility not found</response>
         /// <response code="409">Booking conflict - facility unavailable for specified dates</response>
         [HttpPost]
+        [HttpPost]
         public async Task<ActionResult<BookingResponseDto>> Create([FromBody] BookingCreateDto request)
         {
-            var booking = await _bookingService.CreateBookingAsync(
-                request.CustomerId,
-                request.FacilityId,
-                request.StartDate,
-                request.EndDate,
-                request.NumberOfParticipants,
-                request.Notes);
+            try
+            {
+                var booking = await _bookingService.CreateBookingAsync(
+                    request.CustomerId,
+                    request.FacilityId,
+                    request.StartDate,
+                    request.EndDate,
+                    request.NumberOfParticipants,
+                    request.Notes);
 
-            return CreatedAtAction(nameof(GetById), new { id = booking.Id }, ToDto(booking));
+                return CreatedAtAction(nameof(GetById), new { id = booking.Id }, ToDto(booking));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error create booking for customer {CustomerId}, facility {FacilityId}", request.CustomerId, request.FacilityId);
+                return StatusCode(500, "Error creating booking.");
+            }
         }
 
         /// <summary>
@@ -120,8 +147,16 @@ namespace KonferenscentrumVast.Controllers
         [HttpPost("{id:int}/confirm")]
         public async Task<ActionResult<BookingResponseDto>> Confirm(int id)
         {
-            var updated = await _bookingService.ConfirmBookingAsync(id);
-            return Ok(ToDto(updated));
+            try
+            {
+                var updated = await _bookingService.ConfirmBookingAsync(id);
+                return Ok(ToDto(updated));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error confirm booking {BookingId}", id);
+                return StatusCode(500, "Error confirming booking.");
+            }
         }
 
         /// <summary>
@@ -137,8 +172,16 @@ namespace KonferenscentrumVast.Controllers
         [HttpPost("{id:int}/reschedule")]
         public async Task<ActionResult<BookingResponseDto>> Reschedule(int id, [FromBody] BookingRescheduleDto request)
         {
-            var updated = await _bookingService.RescheduleBookingAsync(id, request.StartDate, request.EndDate);
-            return Ok(ToDto(updated));
+            try
+            {
+                var updated = await _bookingService.RescheduleBookingAsync(id, request.StartDate, request.EndDate);
+                return Ok(ToDto(updated));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error reschedule booking {BookingId}", id);
+                return StatusCode(500, "Error rescheduling booking.");
+            }
         }
 
         /// <summary>
@@ -152,8 +195,16 @@ namespace KonferenscentrumVast.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Cancel(int id, [FromBody] BookingCancelDto? request)
         {
-            await _bookingService.CancelBookingAsync(id, request?.Reason);
-            return NoContent();
+            try
+            {
+                await _bookingService.CancelBookingAsync(id, request?.Reason);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error cancel booking {BookingId}", id);
+                return StatusCode(500, "Error cancelling booking.");
+            }
         }
 
         // ------- mapping helpers-------
