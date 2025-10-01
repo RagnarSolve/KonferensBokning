@@ -148,7 +148,7 @@ namespace KonferenscentrumVast.Controllers
             return Ok(ToDto(entity));
         }
 
-        [HttpPost("upload-contract-pdf")]
+        [HttpPost("upload-contract-pdf")]   //this should be in booking-endpoint instead of upload-contract-pdf endpoint
         public async Task<IActionResult> UploadBlob(IFormFile blobfile)
         {
             var result = await _blobService.UploadAsync(blobfile);
