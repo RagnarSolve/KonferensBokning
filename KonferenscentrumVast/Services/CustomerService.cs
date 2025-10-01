@@ -25,12 +25,14 @@ namespace KonferenscentrumVast.Services
 
         public async Task<Customer> GetByIdAsync(int id)
         {
+            _logger.LogInformation("Trying to get customer ID.");
             return await _customers.GetByIdAsync(id)
                 ?? throw new NotFoundException($"Customer with id={id} was not found.");
         }
 
         public async Task<Customer?> GetByEmailAsync(string email)
         {
+            _logger.LogInformation("Trying to get customer by email.");
             if (string.IsNullOrWhiteSpace(email)) return null;
             var existing = await _customers.GetByEmailAsync(NormalizeEmail(email));
             return existing;
@@ -52,7 +54,10 @@ namespace KonferenscentrumVast.Services
             var normalizedEmail = NormalizeEmail(email);
             var duplicate = await _customers.GetByEmailAsync(normalizedEmail);
             if (duplicate != null)
+            {
+                _logger.LogInformation("Could not use an already existed email.");
                 throw new ConflictException($"A customer with email '{normalizedEmail}' already exists (id={duplicate.Id}).");
+            }
 
             var customer = new Customer
             {
@@ -83,6 +88,7 @@ namespace KonferenscentrumVast.Services
             string? postalCode,
             string? city)
         {
+            _logger.LogInformation("Trying to update customer details.");
             var existing = await _customers.GetByIdAsync(id)
                 ?? throw new NotFoundException($"Customer with id={id} was not found.");
 
@@ -119,6 +125,7 @@ namespace KonferenscentrumVast.Services
         /// </summary>
         public async Task DeleteAsync(int id)
         {
+            _logger.LogInformation("Trying to delete customer.");
             var existing = await _customers.GetByIdAsync(id)
                 ?? throw new NotFoundException($"Customer with id={id} was not found.");
 
