@@ -14,16 +14,10 @@ namespace KonferenscentrumVast.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    public class FacilityController : ControllerBase
+    public class FacilityController(FacilityService service, ILogger<FacilityController> logger) : ControllerBase
     {
-        private readonly FacilityService _service;
-        private readonly ILogger<FacilityController> _logger;
-
-        public FacilityController(FacilityService service, ILogger<FacilityController> logger)
-        {
-            _service = service;
-            _logger = logger;
-        }
+        private readonly FacilityService _service = service;
+        private readonly ILogger<FacilityController> _logger = logger;
 
         /// <summary>
         /// Retrieves all facilities (including inactive ones for administrative purposes)
@@ -32,8 +26,16 @@ namespace KonferenscentrumVast.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<FacilityResponseDto>>> GetAll()
         {
-            var list = await _service.GetAllAsync();
-            return Ok(list.Select(ToDto));
+            try
+            {
+                var list = await _service.GetAllAsync();
+                return Ok(list.Select(ToDto));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error get all facilities");
+                return StatusCode(500, "Error retrieving facilities.");
+            }
         }
 
 
@@ -44,9 +46,18 @@ namespace KonferenscentrumVast.Controllers
         [HttpGet("active")]
         public async Task<ActionResult<IEnumerable<FacilityResponseDto>>> GetActive()
         {
-            var list = await _service.GetActiveAsync();
-            return Ok(list.Select(ToDto));
+            try
+            {
+                var list = await _service.GetActiveAsync();
+                return Ok(list.Select(ToDto));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error get active facilities");
+                return StatusCode(500, "Error retrieving active facilities.");
+            }
         }
+
 
         /// <summary>
         /// Retrieves a specific facility by ID
@@ -58,8 +69,16 @@ namespace KonferenscentrumVast.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult<FacilityResponseDto>> GetById(int id)
         {
-            var facility = await _service.GetByIdAsync(id);
-            return Ok(ToDto(facility));
+            try
+            {
+                var facility = await _service.GetByIdAsync(id);
+                return Ok(ToDto(facility));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error get by Id for facility {FacilityId}", id);
+                return StatusCode(500, "Error retrieving facility by Id.");
+            }
         }
 
         /// <summary>
@@ -72,11 +91,19 @@ namespace KonferenscentrumVast.Controllers
         [HttpPost]
         public async Task<ActionResult<FacilityResponseDto>> Create([FromBody] FacilityCreateDto dto)
         {
-            var facility = await _service.CreateAsync(
-                dto.Name, dto.Description, dto.Address, dto.PostalCode, dto.City,
-                dto.MaxCapacity, dto.PricePerDay, dto.IsActive);
+            try
+            {
+                var facility = await _service.CreateAsync(
+                    dto.Name, dto.Description, dto.Address, dto.PostalCode, dto.City,
+                    dto.MaxCapacity, dto.PricePerDay, dto.IsActive);
 
-            return CreatedAtAction(nameof(GetById), new { id = facility.Id }, ToDto(facility));
+                return CreatedAtAction(nameof(GetById), new { id = facility.Id }, ToDto(facility));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error create facility with name {FacilityName}", dto.Name);
+                return StatusCode(500, "Error creating facility.");
+            }
         }
 
         /// <summary>
@@ -91,11 +118,19 @@ namespace KonferenscentrumVast.Controllers
         [HttpPut("{id:int}")]
         public async Task<ActionResult<FacilityResponseDto>> Update(int id, [FromBody] FacilityUpdateDto dto)
         {
-            var updated = await _service.UpdateAsync(
-                id, dto.Name, dto.Description, dto.Address, dto.PostalCode, dto.City,
-                dto.MaxCapacity, dto.PricePerDay, dto.IsActive);
+            try
+            {
+                var updated = await _service.UpdateAsync(
+                    id, dto.Name, dto.Description, dto.Address, dto.PostalCode, dto.City,
+                    dto.MaxCapacity, dto.PricePerDay, dto.IsActive);
 
-            return Ok(ToDto(updated));
+                return Ok(ToDto(updated));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error update for facility {FacilityId}", id);
+                return StatusCode(500, "Error updating facility.");
+            }
         }
 
         /// <summary>
@@ -108,8 +143,16 @@ namespace KonferenscentrumVast.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _service.DeleteAsync(id);
-            return NoContent();
+            try
+            {
+                await _service.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error delete facility {FacilityId}", id);
+                return StatusCode(500, "Error deleting facility.");
+            }
         }
 
         /// <summary>
@@ -127,8 +170,16 @@ namespace KonferenscentrumVast.Controllers
         [HttpPatch("{id:int}/active")]
         public async Task<ActionResult<FacilityResponseDto>> SetActive(int id, [FromBody] FacilitySetActiveDto dto)
         {
-            var updated = await _service.SetActiveAsync(id, dto.IsActive);
-            return Ok(ToDto(updated));
+            try
+            {
+                var updated = await _service.SetActiveAsync(id, dto.IsActive);
+                return Ok(ToDto(updated));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error set active facility {FacilityId}", id);
+                return StatusCode(500, "Error updating facility active status.");
+            }
         }
 
         private static FacilityResponseDto ToDto(Facility f)
