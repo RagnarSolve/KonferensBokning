@@ -123,7 +123,6 @@ BenchmarkDotNet.Artifacts/
 # .NET Core
 project.lock.json
 project.fragment.lock.json
-local.settings.json
 artifacts/
 
 # StyleCop
@@ -404,8 +403,3 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
-*.zip
-
-node_modules/
-dist/
-.vite/
