@@ -17,10 +17,14 @@ namespace KonferenscentrumVast.Controllers
     public class BookingController(
         BookingService bookingService,
         IBookingRepository bookings,
+        ICustomerRepository customers,
+        SendGridService sendGridEmail,
         ILogger<BookingController> logger) : ControllerBase
     {
         private readonly BookingService _bookingService = bookingService;
         private readonly IBookingRepository _bookings = bookings;
+        private readonly ICustomerRepository _customers = customers;
+        private readonly SendGridService _sendGridEmail = sendGridEmail;
         private readonly ILogger<BookingController> _logger = logger;
 
         /// <summary>
@@ -150,6 +154,17 @@ namespace KonferenscentrumVast.Controllers
             try
             {
                 var updated = await _bookingService.ConfirmBookingAsync(id);
+
+                // Added so the customer gets an email on confirmed
+                var customer = await _customers.GetByIdAsync(updated.CustomerId);
+                if (customer is not null && !string.IsNullOrWhiteSpace(customer.Email))
+                {
+                    _ = _sendGridEmail.SendBookingConfirmedAsync(
+                        customer.Email,
+                        $"{customer.FirstName} {customer.LastName}".Trim(),
+                        updated.Id.ToString());
+                }
+
                 return Ok(ToDto(updated));
             }
             catch (Exception ex)
@@ -198,6 +213,22 @@ namespace KonferenscentrumVast.Controllers
             try
             {
                 await _bookingService.CancelBookingAsync(id, request?.Reason);
+
+                // Added so the customer gets an email on cancelled
+                var booking = await _bookings.GetByIdAsync(id);
+                if (booking is not null)
+                {
+                    var customer = await _customers.GetByIdAsync(booking.CustomerId);
+                    if (customer is not null && !string.IsNullOrWhiteSpace(customer.Email))
+                    {
+                        _ = _sendGridEmail.SendBookingCancelledAsync(
+                            customer.Email,
+                            $"{customer.FirstName} {customer.LastName}".Trim(),
+                            booking.Id.ToString(),
+                            request?.Reason);
+                    }
+                }
+
                 return NoContent();
             }
             catch (Exception ex)

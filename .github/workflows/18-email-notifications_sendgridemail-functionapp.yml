@@ -1,0 +1,36 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build & deploy Azure Function (SendGridEmail)
+
+on:
+  push:
+    branches: [ main ]      # deploy only when main is updated
+  workflow_dispatch:         # allow manual runs
+
+env:
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Publish Function App
+        run: dotnet publish SendGridEmail/SendGridEmail.csproj -c Release -o ./publish
+
+      - name: Deploy to Azure Functions
+        uses: Azure/functions-action@v1
+        with:
+          app-name: sendGridEmail-functionApp
+          slot-name: Production
+          package: ./publish
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_671C4B2BF0694B8987D85A5B3F344098 }}
