@@ -9,7 +9,7 @@ const CustomerModal = ({ customer, onClose }) => {
     lastName: "",
     email: "",
     phone: "",
-    companyName: "", 
+    companyName: "",
     address: "",
     postalCode: "",
     city: "",

@@ -14,7 +14,7 @@ const BookingModal = ({ facility, onClose }) => {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    fetchFilteredBookings(null, facility.id, null, null);
+    fetchFilteredBookings(null, facility.id, null, null); 
   }, [facility.id]);
 
   const handleSubmit = async (e) => {
