@@ -1,9 +1,0 @@
-{
-    "appService.defaultWebAppToDeploy": "/subscriptions/2431774a-3a77-4004-92a1-5d12bb5a561b/resourceGroups/rg-konferens/providers/Microsoft.Web/sites/konferenscentrumvast",
-    "appService.deploySubpath": "KonferenscentrumVast",
-    "azureFunctions.deploySubpath": "KonferenscentrumVast\\Functions/bin/Release/net8.0/publish",
-    "azureFunctions.projectLanguage": "C#",
-    "azureFunctions.projectRuntime": "~4",
-    "debug.internalConsoleOptions": "neverOpen",
-    "azureFunctions.preDeployTask": "publish (functions)"
-}
