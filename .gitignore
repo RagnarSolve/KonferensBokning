@@ -405,3 +405,7 @@ ASALocalRun/
 # Local History for Visual Studio
 .localhistory/
 *.zip
+
+node_modules/
+dist/
+.vite/
