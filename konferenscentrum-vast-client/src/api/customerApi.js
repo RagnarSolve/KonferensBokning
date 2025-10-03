@@ -7,18 +7,19 @@ const api = axios.create({
   },
 });
 
-// GET /api/customer
+
 export const customerApi = {
-  async getAll() {
-    try {
-      const response = await api.get("/customer");
-      return response.data;
-    } catch (error) {
-      throw new Error(
-        error.response?.data?.message || "Failed to fetch customers"
-      );
-    }
-  },
+// GET /api/customer
+async getAll() {
+  try {
+    const response = await api.get("/customer");
+    return Array.isArray(response.data) ? response.data : response.data?.data || [];
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch customers"
+    );
+  }
+},
 
   // GET /api/customer/{id}
   async getById(id) {

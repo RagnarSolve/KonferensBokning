@@ -8,17 +8,17 @@ const api = axios.create({
 });
 
 export const bookingContractApi = {
-  // GET /api/bookingcontract
-  async getAll() {
-    try {
-      const response = await api.get("/bookingcontract");
-      return response.data;
-    } catch (error) {
-      throw new Error(
-        error.response?.data?.message || "Failed to fetch contracts"
-      );
-    }
-  },
+// GET /api/bookingcontract
+async getAll() {
+  try {
+    const response = await api.get("/bookingcontract");
+    return Array.isArray(response.data) ? response.data : response.data?.data || [];
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch contracts"
+    );
+  }
+},
 
   // GET /api/bookingcontract/{id}
   async getById(id) {
