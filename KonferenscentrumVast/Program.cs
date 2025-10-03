@@ -64,15 +64,12 @@ if (string.IsNullOrWhiteSpace(cosmosEndpoint) || string.IsNullOrWhiteSpace(cosmo
     throw new InvalidOperationException("One or more required Cosmos DB configuration values are missing (Endpoint, Key, or Database).");
 }
 
+// Register DbContext with Cosmos
 builder.Services.AddDbContext<ApplicationDbContext>(opt =>
-opt.UseCosmos(
-    cosmosEndpoint,
-    cosmosKey,
-    cosmosDatabase
-    ));
+    opt.UseCosmos(cosmosEndpoint, cosmosKey, cosmosDatabase));
 
-var blobConnection = builder.Configuration["BlobStorage:Connection"];
-var containerName = builder.Configuration["BlobStorage:ContainerName"];
+var blobConnection = builder.Configuration["BlobStorage--Connection"];
+var containerName = builder.Configuration["BlobStorage--ContainerName"];
 
 if (string.IsNullOrWhiteSpace(blobConnection))
 {
