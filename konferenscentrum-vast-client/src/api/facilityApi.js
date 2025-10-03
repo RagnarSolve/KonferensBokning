@@ -8,17 +8,17 @@ const api = axios.create({
 });
 
 export const facilityApi = {
-  // GET /api/facility
-  async getAll() {
-    try {
-      const response = await api.get("/facility");
-      return response.data;
-    } catch (error) {
-      throw new Error(
-        error.response?.data?.message || "Failed to fetch facilities"
-      );
-    }
-  },
+// GET /api/facility
+async getAll() {
+  try {
+    const response = await api.get("/facility");
+    return Array.isArray(response.data) ? response.data : response.data?.data || [];
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch facilities"
+    );
+  }
+},
 
   // GET /api/facility/active
   async getActive() {

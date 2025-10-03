@@ -8,17 +8,17 @@ const api = axios.create({
 });
 
 export const bookingApi = {
-  // GET /api/booking
-  async getAll() {
-    try {
-      const response = await api.get("/booking");
-      return response.data;
-    } catch (error) {
-      throw new Error(
-        error.response?.data?.message || "Failed to fetch bookings"
-      );
-    }
-  },
+// GET /api/booking
+async getAll() {
+  try {
+    const response = await api.get("/booking");
+    return Array.isArray(response.data) ? response.data : response.data?.data || [];
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch bookings"
+    );
+  }
+},
 
   // GET /api/booking/{id}
   async getById(id) {
