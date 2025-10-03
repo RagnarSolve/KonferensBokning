@@ -8,6 +8,8 @@ using Microsoft.OpenApi.Models;
 using System.Reflection;
 using Azure.Identity;
 using Azure.Extensions.AspNetCore.Configuration.Secrets;
+using Azure.Storage.Blobs;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 // Swagger/OpenAPI
+builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -41,21 +44,63 @@ builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<FacilityService>();
 builder.Services.AddScoped<BookingContractService>();
 builder.Services.AddScoped<CustomerService>();
+builder.Services.AddScoped<SendGridService>();
 
 // Database
+
 var keyVaultUri = builder.Configuration["KeyVaultUri"];
 if (!string.IsNullOrWhiteSpace(keyVaultUri))
 {
     builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
 }
+var cosmosEndpoint = builder.Configuration["Cosmos:Endpoint"];
+var cosmosKey = builder.Configuration["Cosmos:Key"];
+var cosmosDatabase = builder.Configuration["Cosmos:Database"];
+if (string.IsNullOrWhiteSpace(cosmosEndpoint) || string.IsNullOrWhiteSpace(cosmosKey) || string.IsNullOrWhiteSpace(cosmosDatabase))
+{
+    throw new InvalidOperationException("One or more required Cosmos DB configuration values are missing (Endpoint, Key, or Database).");
+}
 
-var cosmos = builder.Configuration.GetRequiredSection("Cosmos");
 builder.Services.AddDbContext<ApplicationDbContext>(opt =>
-    opt.UseCosmos(
-        cosmos["Endpoint"]!,
-        cosmos["Key"]!,
-        cosmos["Database"]!
+opt.UseCosmos(
+    cosmosEndpoint,
+    cosmosKey,
+    cosmosDatabase
     ));
+
+var blobConnection = builder.Configuration["BlobStorage:Connection"];
+var containerName = builder.Configuration["BlobStorage:ContainerName"];
+
+if (string.IsNullOrWhiteSpace(blobConnection))
+{
+    throw new InvalidOperationException("Connection-string missing in 'BlobStorage:ConnectionString'.");
+}
+
+if (string.IsNullOrWhiteSpace(containerName))
+{
+    throw new InvalidOperationException("Container name missing in 'BlobStorage:ContainerName'.");
+}
+
+var blobServiceClient = new BlobServiceClient(blobConnection);
+
+builder.Services.AddSingleton(blobServiceClient);
+builder.Services.AddScoped<BlobService>(provider =>
+    new BlobService(provider.GetRequiredService<BlobServiceClient>(),
+    containerName!,
+    provider.GetRequiredService<ILogger<BlobService>>()
+));
+
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy("dev", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:7166")
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
@@ -64,16 +109,13 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage(); // add this
 }
 
+
 app.UseSwagger();
 app.UseSwaggerUI(); // optional: c => { c.RoutePrefix = string.Empty; }
-
-
-
 app.UseExceptionMapping();    // our custom exception -> HTTP mapping
-app.UseHttpsRedirection();
 app.UseCors("dev");           // remove or change if not needed
+app.UseHttpsRedirection();
 app.UseAuthorization();
-
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())

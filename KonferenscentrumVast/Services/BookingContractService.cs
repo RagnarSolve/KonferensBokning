@@ -38,15 +38,26 @@ namespace KonferenscentrumVast.Services
         /// </summary>
         public async Task<BookingContract> CreateBasicForBookingAsync(int bookingId, string? termsOverride = null, DateTime? paymentDue = null)
         {
+            _logger.LogInformation("Trying to create a contract for booking.");
+
             var booking = await _bookings.GetByIdAsync(bookingId)
                 ?? throw new NotFoundException($"Booking with id={bookingId} was not found.");
 
             if (booking.Status == BookingStatus.Cancelled)
+            {
+                _logger.LogInformation("Could not create contract because of cancelled booking.");
                 throw new ValidationException("Cannot create a contract for a cancelled booking.");
+            }
+            _logger.LogInformation("Booking ID was found.");
+                
 
             var existing = await _contracts.GetByBookingIdAsync(bookingId);
             if (existing != null)
+            {
+                _logger.LogInformation("Contract already occupied with that booking ID.");
                 throw new ConflictException($"A contract already exists for booking id={bookingId} (id={existing.Id}).");
+            }
+            _logger.LogInformation("No contract(s) found with that booking ID.");
 
             var facility = await _facilities.GetByIdAsync(booking.FacilityId)
                 ?? throw new NotFoundException($"Facility with id={booking.FacilityId} was not found.");
@@ -79,12 +90,14 @@ namespace KonferenscentrumVast.Services
 
         public async Task<BookingContract> GetByIdAsync(int contractId)
         {
+            _logger.LogInformation("Trying to find contract ID.");
             return await _contracts.GetByIdAsync(contractId)
                 ?? throw new NotFoundException($"Contract with id={contractId} was not found.");
         }
 
         public async Task<BookingContract> GetByBookingIdAsync(int bookingId)
         {
+            _logger.LogInformation("Trying to find contract with booking ID.");
             return await _contracts.GetByBookingIdAsync(bookingId)
                 ?? throw new NotFoundException($"Contract for booking id={bookingId} was not found.");
         }
@@ -95,19 +108,26 @@ namespace KonferenscentrumVast.Services
         /// </summary>
         public async Task<BookingContract> PatchAsync(int id, BookingContractPatchDto dto)
         {
+            _logger.LogInformation("Trying to update contract terms etc.");
             var existing = await _contracts.GetByIdAsync(id)
                 ?? throw new NotFoundException($"Contract with id={id} was not found.");
 
             if (existing.Status is ContractStatus.Signed or ContractStatus.Cancelled)
+            {
+                _logger.LogInformation("Could not modify the contract.");
                 throw new ValidationException("Cannot modify a signed or cancelled contract.");
+            }
 
             if (!string.IsNullOrWhiteSpace(dto.Terms))
-                existing.Terms = dto.Terms.Trim();
+                    existing.Terms = dto.Terms.Trim();
 
             if (dto.TotalAmount.HasValue)
             {
                 if (dto.TotalAmount.Value < 0)
+                {
+                    _logger.LogInformation("Amount could not be below zero or negative.");
                     throw new ValidationException("Total amount cannot be negative.");
+                }
                 existing.TotalAmount = dto.TotalAmount.Value;
             }
 
@@ -129,6 +149,7 @@ namespace KonferenscentrumVast.Services
         /// </summary>
         public async Task<BookingContract> MarkSentAsync(int id)
         {
+            _logger.LogInformation("Trying to sent Marks contract to customer.");
             var existing = await _contracts.GetByIdAsync(id)
                 ?? throw new NotFoundException($"Contract with id={id} was not found.");
 
@@ -136,10 +157,14 @@ namespace KonferenscentrumVast.Services
                 ?? throw new NotFoundException($"Booking with id={existing.BookingId} was not found.");
 
             if (booking.Status != BookingStatus.Confirmed)
+            {
                 throw new ValidationException("Cannot send contract for unconfirmed booking. Confirm the booking first.");
+            }
 
             if (existing.Status == ContractStatus.Cancelled)
+            {
                 throw new ValidationException("Cannot mark a cancelled contract as sent.");
+            }
 
             existing.Status = ContractStatus.Sent;
             existing.LastUpdated = DateTime.UtcNow;
@@ -157,6 +182,7 @@ namespace KonferenscentrumVast.Services
         /// </summary>
         public async Task<BookingContract> MarkSignedAsync(int id, DateTime? signedAt = null)
         {
+            _logger.LogInformation("Trying to signed and marked contract.");
             var existing = await _contracts.GetByIdAsync(id)
                 ?? throw new NotFoundException($"Contract with id={id} was not found.");
 
@@ -164,10 +190,14 @@ namespace KonferenscentrumVast.Services
                 ?? throw new NotFoundException($"Booking with id={existing.BookingId} was not found.");
 
             if (booking.Status != BookingStatus.Confirmed)
+            {
                 throw new ValidationException("Cannot sign contract for unconfirmed booking. Confirm the booking first.");
+            }
 
             if (existing.Status == ContractStatus.Cancelled)
+            {
                 throw new ValidationException("Cannot sign a cancelled contract.");
+            }
 
             existing.Status = ContractStatus.Signed;
             existing.SignedAt = signedAt ?? DateTime.UtcNow;

@@ -15,18 +15,12 @@ namespace KonferenscentrumVast.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    public class BookingContractController : ControllerBase
+    public class BookingContractController(BookingContractService service, BlobService blobService, IBookingContractRepository contracts, ILogger<BookingContractController> logger) : ControllerBase
     {
-        private readonly BookingContractService _service;
-        private readonly IBookingContractRepository _contracts;
-        private readonly ILogger<BookingContractController> _logger;
-
-        public BookingContractController(BookingContractService service, IBookingContractRepository contracts, ILogger<BookingContractController> logger)
-        {
-            _service = service;
-            _logger = logger;
-            _contracts = contracts;
-        }
+        private readonly BookingContractService _service = service;
+        private readonly BlobService _blobService = blobService;
+        private readonly IBookingContractRepository _contracts = contracts;
+        private readonly ILogger<BookingContractController> _logger = logger;
 
         /// <summary>
         /// Retrieves a specific contract by ID
@@ -38,8 +32,16 @@ namespace KonferenscentrumVast.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult<BookingContractResponseDto>> GetById(int id)
         {
-            var entity = await _service.GetByIdAsync(id);
-            return Ok(ToDto(entity));
+            try
+            {
+                var entity = await _service.GetByIdAsync(id);
+                return Ok(ToDto(entity));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching contract {Id}", id);
+                return StatusCode(500, "Error retrieving contract.");
+            }
         }
 
         /// <summary>
@@ -49,8 +51,16 @@ namespace KonferenscentrumVast.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<BookingContractResponseDto>>> GetAll()
         {
-            var data = await _contracts.GetAllAsync();
-            return Ok(data.Select(ToDto));
+            try
+            {
+                var data = await _contracts.GetAllAsync();
+                return Ok(data.Select(ToDto));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching all contracts");
+                return StatusCode(500, "Error retrieving contracts.");
+            }
         }
 
         /// <summary>
@@ -63,8 +73,16 @@ namespace KonferenscentrumVast.Controllers
         [HttpGet("booking/{bookingId:int}")]
         public async Task<ActionResult<BookingContractResponseDto>> GetByBookingId(int bookingId)
         {
-            var entity = await _service.GetByBookingIdAsync(bookingId);
-            return Ok(ToDto(entity));
+            try
+            {
+                var entity = await _service.GetByBookingIdAsync(bookingId);
+                return Ok(ToDto(entity));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching contract for booking {BookingId}", bookingId);
+                return StatusCode(500, "Error retrieving the contract for booking.");
+            }
         }
 
         /// create a basic contract for a booking (if not auto-created)
@@ -78,10 +96,29 @@ namespace KonferenscentrumVast.Controllers
         /// <response code="400">Invalid booking or contract data</response>
         /// <response code="409">Contract already exists for booking</response>
         [HttpPost("booking/{bookingId:int}")]
-        public async Task<ActionResult<BookingContractResponseDto>> CreateContract(int bookingId, [FromBody] BookingContractCreateDto dto)
+        public async Task<ActionResult<BookingContractResponseDto>> CreateContract(
+            int bookingId,
+            [FromBody] BookingContractCreateDto dto)
         {
-            var entity = await _service.CreateBasicForBookingAsync(bookingId, dto.Terms, dto.PaymentDueDate);
-            return CreatedAtAction(nameof(GetByBookingId), new { bookingId = entity.BookingId }, ToDto(entity));
+            try
+            {
+                var entity = await _service.CreateBasicForBookingAsync(
+                    bookingId,
+                    dto.Terms,
+                    dto.PaymentDueDate
+                );
+
+                return CreatedAtAction(
+                    nameof(GetByBookingId),
+                    new { bookingId = entity.BookingId },
+                    ToDto(entity)
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating contract for booking {BookingId}", bookingId);
+                return StatusCode(500, "Error while creating the contract.");
+            }
         }
 
         /// <summary>
@@ -94,10 +131,20 @@ namespace KonferenscentrumVast.Controllers
         /// <response code="400">Cannot modify signed or cancelled contract</response>
         /// <response code="404">Contract not found</response>
         [HttpPatch("{id:int}")]
-        public async Task<ActionResult<BookingContractResponseDto>> Patch(int id, [FromBody] BookingContractPatchDto dto)
+        public async Task<ActionResult<BookingContractResponseDto>> Patch(
+            int id,
+            [FromBody] BookingContractPatchDto dto)
         {
-            var entity = await _service.PatchAsync(id, dto);
-            return Ok(ToDto(entity));
+            try
+            {
+                var entity = await _service.PatchAsync(id, dto);
+                return Ok(ToDto(entity));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating contract {Id}", id);
+                return StatusCode(500, "Error while updating contract.");
+            }
         }
 
         /// <summary>
@@ -111,8 +158,16 @@ namespace KonferenscentrumVast.Controllers
         [HttpPost("{id:int}/send")]
         public async Task<ActionResult<BookingContractResponseDto>> MarkSent(int id)
         {
-            var entity = await _service.MarkSentAsync(id);
-            return Ok(ToDto(entity));
+            try
+            {
+                var entity = await _service.MarkSentAsync(id);
+                return Ok(ToDto(entity));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking contract {Id} as sent", id);
+                return StatusCode(500, "Error while updating contract as sent.");
+            }
         }
 
         /// <summary>
@@ -126,8 +181,16 @@ namespace KonferenscentrumVast.Controllers
         [HttpPost("{id:int}/sign")]
         public async Task<ActionResult<BookingContractResponseDto>> MarkSigned(int id)
         {
-            var entity = await _service.MarkSignedAsync(id);
-            return Ok(ToDto(entity));
+            try
+            {
+                var entity = await _service.MarkSignedAsync(id);
+                return Ok(ToDto(entity));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking contract {Id} as signed", id);
+                return StatusCode(500, "Error while updating contract as signed.");
+            }
         }
 
         /// <summary>
@@ -140,10 +203,27 @@ namespace KonferenscentrumVast.Controllers
         /// <response code="404">Contract not found</response>
 
         [HttpPost("{id:int}/cancel")]
-        public async Task<ActionResult<BookingContractResponseDto>> Cancel(int id, [FromBody] string? reason)
+        public async Task<ActionResult<BookingContractResponseDto>> Cancel(
+            int id,
+            [FromBody] string? reason)
         {
-            var entity = await _service.CancelAsync(id, reason);
-            return Ok(ToDto(entity));
+            try
+            {
+                var entity = await _service.CancelAsync(id, reason);
+                return Ok(ToDto(entity));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error cancelling contract {Id}", id);
+                return StatusCode(500, "Error cancelling the contract.");
+            }
+        }
+
+        [HttpPost("upload-contract-pdf")]   //this should be in booking-endpoint instead of upload-contract-pdf endpoint
+        public async Task<IActionResult> UploadBlob(IFormFile blobfile)
+        {
+            var result = await _blobService.UploadAsync(blobfile);
+            return Ok(result);
         }
 
         /// <summary>
