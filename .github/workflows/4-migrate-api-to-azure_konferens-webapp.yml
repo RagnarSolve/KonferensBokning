@@ -3,6 +3,7 @@ name: Build and deploy ASP.Net Core app to Azure Web App - konferens-webApp
 on:
   push:
     branches:
+      - main
       - 4-migrate-api-to-azure
   workflow_dispatch:
 
