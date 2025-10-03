@@ -47,12 +47,15 @@ builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<SendGridService>();
 
 // Database
-
-var keyVaultUri = builder.Configuration["KeyVaultUri"];
-if (!string.IsNullOrWhiteSpace(keyVaultUri))
+if (builder.Environment.IsDevelopment())
 {
-    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
+    var kvUri = builder.Configuration["KeyVaultUri"];
+    if (!string.IsNullOrWhiteSpace(kvUri))
+    {
+        builder.Configuration.AddAzureKeyVault(new Uri(kvUri), new DefaultAzureCredential());
+    }
 }
+
 var cosmosEndpoint = builder.Configuration["Cosmos:Endpoint"];
 var cosmosKey = builder.Configuration["Cosmos:Key"];
 var cosmosDatabase = builder.Configuration["Cosmos:Database"];
