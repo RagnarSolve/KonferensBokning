@@ -97,7 +97,9 @@ builder.Services.AddCors(opt =>
     {
         policy.WithOrigins("http://localhost:3000",
         "http://localhost:5173",
-        "http://localhost:7166")
+        "http://localhost:7166",
+        "https://konferens-bokning.vercel.app"
+        )
         .AllowAnyHeader()
         .AllowAnyMethod();
     });
