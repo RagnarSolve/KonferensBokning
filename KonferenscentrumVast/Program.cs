@@ -47,12 +47,11 @@ builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<SendGridService>();
 
 // Database
-var kvUri = builder.Configuration["KeyVaultUri"];
-if (!string.IsNullOrWhiteSpace(kvUri))
+var keyVaultUri = builder.Configuration["KeyVaultUri"];
+if (!string.IsNullOrWhiteSpace(keyVaultUri))
 {
-    builder.Configuration.AddAzureKeyVault(new Uri(kvUri), new DefaultAzureCredential());
+    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
 }
-
 var cosmosEndpoint = builder.Configuration["Cosmos:Endpoint"];
 var cosmosKey = builder.Configuration["Cosmos:Key"];
 var cosmosDatabase = builder.Configuration["Cosmos:Database"];
@@ -61,12 +60,15 @@ if (string.IsNullOrWhiteSpace(cosmosEndpoint) || string.IsNullOrWhiteSpace(cosmo
     throw new InvalidOperationException("One or more required Cosmos DB configuration values are missing (Endpoint, Key, or Database).");
 }
 
-// Register DbContext with Cosmos
 builder.Services.AddDbContext<ApplicationDbContext>(opt =>
-    opt.UseCosmos(cosmosEndpoint, cosmosKey, cosmosDatabase));
+opt.UseCosmos(
+    cosmosEndpoint,
+    cosmosKey,
+    cosmosDatabase
+    ));
 
-var blobConnection = builder.Configuration["BlobStorage--Connection"];
-var containerName = builder.Configuration["BlobStorage--ContainerName"];
+var blobConnection = builder.Configuration["BlobStorage:Connection"];
+var containerName = builder.Configuration["BlobStorage:ContainerName"];
 
 if (string.IsNullOrWhiteSpace(blobConnection))
 {
