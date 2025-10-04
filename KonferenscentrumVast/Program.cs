@@ -47,13 +47,10 @@ builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<SendGridService>();
 
 // Database
-if (builder.Environment.IsDevelopment())
+var kvUri = builder.Configuration["KeyVaultUri"];
+if (!string.IsNullOrWhiteSpace(kvUri))
 {
-    var kvUri = builder.Configuration["KeyVaultUri"];
-    if (!string.IsNullOrWhiteSpace(kvUri))
-    {
-        builder.Configuration.AddAzureKeyVault(new Uri(kvUri), new DefaultAzureCredential());
-    }
+    builder.Configuration.AddAzureKeyVault(new Uri(kvUri), new DefaultAzureCredential());
 }
 
 var cosmosEndpoint = builder.Configuration["Cosmos:Endpoint"];
@@ -76,7 +73,7 @@ var containerName = builder.Configuration["BlobStorage:ContainerName"];
 
 if (string.IsNullOrWhiteSpace(blobConnection))
 {
-    throw new InvalidOperationException("Connection-string missing in 'BlobStorage:ConnectionString'.");
+    throw new InvalidOperationException("Connection-string missing in 'BlobStorage:Connection'.");
 }
 
 if (string.IsNullOrWhiteSpace(containerName))
